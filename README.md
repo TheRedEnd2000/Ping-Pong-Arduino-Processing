@@ -11,11 +11,36 @@ Entwickelt von Fabian. (Credit: Adrian)
   - **Tastatur**: W/S und Pfeiltasten
   - **Arduino / Serial**: Potis
 - Punkte-System mit einstellbarer Gewinnpunktzahl
+- **Bot Mode (Singleplayer)**
+  - Mehrere Schwierigkeitsstufen (Baby → Impossible)
 - Soundeffekte:
   - Treffer, Punkt, Start, Sieg
 - Hintergrundmusik im Spiel und im Menü
 - Lautstärkeregler im Startscreen
 - Auto-Reset nach Spielende
+
+---
+
+## Bot Mode
+
+Das Spiel kann optional **gegen einen Bot (KI)** gespielt werden.  
+Der Bot steuert **Spieler 2** und reagiert abhängig vom gewählten Schwierigkeitsgrad.
+
+### Schwierigkeitsstufen
+
+| Stufe | Schnellichkeit |
+|-----|-------------|
+| **Baby** | 3 |
+| **Easy** | 5 |
+| **Normal** | 6 |
+| **Hard** | 8 |
+| **Very Hard** | 14 |
+| **Impossible** | 20 |
+
+### Steuerung (Bot)
+
+- `[B]` → Bot Mode ein / aus
+- `[←] / [→]` → Schwierigkeit ändern *(nur bei aktivem Bot)*
 
 ---
 
