@@ -21,7 +21,6 @@ int ballDirY = 1;
 int ballSpeed = 5;
 int p1Y, p2Y;
 int pointsP1, pointsP2 = 0;
-int PUX, PUY;
 
 //Tastatur boolean für smoothes Bewegen der Paddles
 boolean wPressed, sPressed;
@@ -35,6 +34,13 @@ boolean inStartScreen = true;
 boolean gameOver = false;
 boolean useKeys;
 boolean invertControls = false;
+
+boolean vsBot = true;
+
+String[] difficultyNames = {"Baby", "Easy", "Normal", "Hard", "Very Hard", "Impossible"};
+int currentDifficulty = 2;
+float[] botSpeeds = {3, 5, 6, 8, 14, 20}; // passende Geschwindigkeit pro Stufe
+float BOT_SPEED;
 
 //Musik Files und Lautstärke
 float masterVolume = 0.4; // 0.0 = aus, 1.0 = max
@@ -75,9 +81,9 @@ void setup() {
 
   applyVolume();
 }
-
 void draw() {
   background(255);
+  println(BOT_SPEED);
 
   //Einstellungen für den Startscreen mit Musik und dem Ball-Beispiel
   if (inStartScreen) {
@@ -107,14 +113,34 @@ void draw() {
   if (sPressed) p1Y += PADDLE_SPEED;
   if (pPressed) p2Y -= PADDLE_SPEED;
   if (oePressed) p2Y += PADDLE_SPEED;
+  
+  
 
   //Einstellung für Serial oder Keys (Paddels setzen)
-  if(useKeys){
+  if(vsBot){
+    if(useKeys){
+    p1Y = constrain(p1Y, PADDLE_H/2, height - PADDLE_H/2);
+  } else {
+    p1Y = int(map(pad1Percent, 0, 100, PADDLE_H/2, height - PADDLE_H/2));
+  }
+  float targetY = ballY;
+  if(p2Y < targetY){
+    p2Y += BOT_SPEED;
+    if(p2Y > targetY) p2Y = (int) targetY;
+  } else if(p2Y > targetY){
+    p2Y -= BOT_SPEED;
+    if(p2Y < targetY) p2Y = (int) targetY;
+  }
+  
+  p2Y = constrain(p2Y, PADDLE_H/2, height - PADDLE_H/2);
+  }else{
+    if(useKeys){
     p1Y = constrain(p1Y, PADDLE_H/2, height - PADDLE_H/2);
     p2Y = constrain(p2Y, PADDLE_H/2, height - PADDLE_H/2);
   } else {
     p1Y = int(map(pad1Percent, 0, 100, PADDLE_H/2, height - PADDLE_H/2));
     p2Y = int(map(pad2Percent, 0, 100, PADDLE_H/2, height - PADDLE_H/2));
+  }
   }
 
   //Ball bewegen
@@ -210,8 +236,10 @@ void drawPaddles() {
 void keyReleased() {
   if (key == 'w') wPressed = false;
   if (key == 's') sPressed = false;
-  if (keyCode == UP) pPressed = false;
-  if (keyCode == DOWN) oePressed = false;
+  if(!vsBot){
+    if (keyCode == UP) pPressed = false;
+    if (keyCode == DOWN) oePressed = false;
+  }
 }
 
 // Tasten Input steuerung für StartScreen und Game
@@ -220,6 +248,9 @@ void keyPressed() {
     if (key == '+' || key == '=') pointsToWin++;
     if (key == '-' && pointsToWin > 1) pointsToWin--;
     if (key == 'r') if(mySerial != null) useKeys = !useKeys;
+    if (key == 'b') vsBot = !vsBot;
+    if (keyCode == RIGHT) currentDifficulty = min(currentDifficulty + 1, 5);
+    if (keyCode == LEFT) currentDifficulty = max(currentDifficulty -1, 0);
     if (key == 'v') { masterVolume = min(masterVolume + 0.1, 1.0); applyVolume(); }
     if (key == 'c') { masterVolume = max(masterVolume - 0.1, 0.0); applyVolume(); }
     if (keyCode == ENTER) {
@@ -230,6 +261,7 @@ void keyPressed() {
       resetBall();
       startSound.play();
     }
+    BOT_SPEED = botSpeeds[currentDifficulty];
     return;
   }
 
@@ -244,35 +276,76 @@ void drawStartScreen() {
   textAlign(CENTER, CENTER);
   fill(0);
 
+  // Titel
   textSize(72);
   text("PING PONG", width / 2, height / 2 - 260);
-  textSize(20);
-  text("erstellt von Fabian (Credit: Adrian)", width / 2, height / 2 - 220);
 
-  textSize(34);
-  text("Spiel-Einstellungen", width / 2, height / 2 - 160);
+  textSize(20);
+  text("erstellt von Fabian (Credit: Adrian)", width / 2, height / 2 - 215);
+
+  // Einstellungen Titel
+  textSize(36);
+  text("Spiel-Einstellungen", width / 2, height / 2 - 155);
+
+  // Layout-Positionen
+  int labelX = width / 2 - 150;
+  int valueX = width / 2 + 150;
+  int startY = height / 2 - 105;
+  int lineH = 40;
+
   textSize(24);
-  text("Steuerung:", width / 2 - 120, height / 2 - 110);
-  text(useKeys ? "Tastatur" : "Controller / Serial", width / 2 + 120, height / 2 - 110);
-  text("Punkte zum Sieg:", width / 2 - 120, height / 2 - 70);
-  text(pointsToWin, width / 2 + 120, height / 2 - 70);
-  text("Lautstärke:", width / 2 - 120, height / 2 - 30);
-  text(round(masterVolume * 100)+"%", width / 2 + 120, height / 2 - 30);
 
+  // Steuerung
+  text("Steuerung:", labelX, startY);
+  text(useKeys ? "Tastatur" : "Controller / Serial", valueX, startY);
+
+  // Punkte
+  text("Punkte zum Sieg:", labelX, startY + lineH);
+  text(pointsToWin, valueX, startY + lineH);
+
+  // Bot
+  text("Gegen Bot:", labelX, startY + lineH * 2);
+  text(vsBot ? "Ja" : "Nein", valueX, startY + lineH * 2);
+
+  // Schwierigkeit nur wenn Bot aktiv
+  if (vsBot) {
+    text("Schwierigkeit:", labelX, startY + lineH * 3);
+    text(difficultyNames[currentDifficulty], valueX, startY + lineH * 3);
+  }
+
+  // Lautstärke
+  int volumeOffset = vsBot ? 4 : 3;
+  text("Lautstärke:", labelX, startY + lineH * volumeOffset);
+  text(round(masterVolume * 100) + "%", valueX, startY + lineH * volumeOffset);
+
+  // Steuerhinweise
   textSize(18);
-  text("Tastatur wechseln: [ R ]", width / 2, height / 2 - 5);
-  text("Punkte ändern: [ + ] / [ - ]", width / 2, height / 2 + 20);
-  text("Lautstärke ändern: [ V ] / [ C ]", width / 2, height / 2 + 45);
+  int hintY = startY + lineH * (volumeOffset + 1) + 20;
+  text("Tastatur wechseln: [ R ]", width / 2, hintY);
+  text("Bot Mode wechseln: [ B ]", width / 2, hintY + 25);
+  if (vsBot) {
+    text("Schwierigkeit des Bots ändern: [ ← ] / [ → ]", width / 2, hintY + 50);
+    text("Punkte ändern: [ + ] / [ - ]", width / 2, hintY + 75);
+    text("Lautstärke ändern: [ V ] / [ C ]", width / 2, hintY + 100);
+  } else {
+    text("Punkte ändern: [ + ] / [ - ]", width / 2, hintY + 50);
+    text("Lautstärke ändern: [ V ] / [ C ]", width / 2, hintY + 75);
+  }
 
-  textSize(30);
-  text("Steuerung", width / 2, height / 2 + 80);
+  // Steuerung Erklärung
+  textSize(28);
+  text("Steuerung", width / 2, hintY + 120 + (vsBot ? 55 : 0));
+
   textSize(20);
-  text("Spieler 1:   W / S", width / 2, height / 2 + 120);
-  text("Spieler 2:   ↑ / ↓", width / 2, height / 2 + 145);
+  text("Spieler 1:   W / S", width / 2, hintY + 155 + (vsBot ? 55 : 0));
+  if (!vsBot)
+    text("Spieler 2:   ↑ / ↓", width / 2, hintY + 180);
 
-  textSize(26);
-  text("ENTER zum Starten", width / 2, height / 2 + 200);
+  // Start Hinweis
+  textSize(30);
+  text("ENTER zum Starten", width / 2, height - 80);
 }
+
 
 // Serial lesen
 void serialEvent(Serial mySerial) {
@@ -293,7 +366,7 @@ void drawGameOver() {
   fill(0);
   textSize(48);
   if (pointsP1 >= pointsToWin) text("Spieler 1 gewinnt!", width / 2, height / 2 - 40);
-  else text("Spieler 2 gewinnt!", width / 2, height / 2 - 40);
+  else text(""+(vsBot ? "Bot": "Spieler 2")+" gewinnt!", width / 2, height / 2 - 40);
 }
 
 //Musik lautstärke
