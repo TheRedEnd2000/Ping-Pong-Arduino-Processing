@@ -1,8 +1,12 @@
 import processing.serial.*;
 import processing.sound.*;
 
+
+
 // Dieser COM Port ist wichtig zu ändern, falls man die Serial benutzen möchte!
 String port = "COM3";
+
+
 
 // Variablen festlegen von Bildschirm, Ball, Ballspeed und Paddles
 final int SCREEN_W = 1500;
@@ -35,7 +39,7 @@ boolean gameOver = false;
 boolean useKeys;
 boolean invertControls = false;
 
-boolean vsBot = true;
+boolean vsBot = false;
 
 String[] difficultyNames = {"Baby", "Easy", "Normal", "Hard", "Very Hard", "Impossible"};
 int currentDifficulty = 2;
@@ -83,7 +87,6 @@ void setup() {
 }
 void draw() {
   background(255);
-  println(BOT_SPEED);
 
   //Einstellungen für den Startscreen mit Musik und dem Ball-Beispiel
   if (inStartScreen) {
