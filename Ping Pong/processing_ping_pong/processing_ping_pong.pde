@@ -35,7 +35,7 @@ boolean gameOver = false;
 boolean useKeys;
 boolean invertControls = false;
 
-boolean vsBot = true;
+boolean vsBot = false;
 
 String[] difficultyNames = {"Baby", "Easy", "Normal", "Hard", "Very Hard", "Impossible"};
 int currentDifficulty = 2;
@@ -83,7 +83,6 @@ void setup() {
 }
 void draw() {
   background(255);
-  println(BOT_SPEED);
 
   //Einstellungen für den Startscreen mit Musik und dem Ball-Beispiel
   if (inStartScreen) {
