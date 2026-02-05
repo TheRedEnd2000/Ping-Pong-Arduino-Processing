@@ -2,7 +2,7 @@ import processing.serial.*;
 import processing.sound.*;
 
 // Dieser COM Port ist wichtig zu ändern, falls man die Serial benutzen möchte!
-String port = "COM3";
+String port = "COM9";
 
 // Variablen festlegen von Bildschirm, Ball, Ballspeed und Paddles
 final int SCREEN_W = 1500;
@@ -39,7 +39,7 @@ boolean vsBot = false;
 
 String[] difficultyNames = {"Baby", "Easy", "Normal", "Hard", "Very Hard", "Impossible"};
 int currentDifficulty = 2;
-float[] botSpeeds = {3, 5, 6, 8, 14, 20}; // passende Geschwindigkeit pro Stufe
+float[] botSpeeds = {3, 5, 7, 10, 15, 20}; // passende Geschwindigkeit pro Stufe
 float BOT_SPEED;
 
 //Musik Files und Lautstärke
@@ -78,11 +78,10 @@ void setup() {
   startSound = new SoundFile(this, "start.mp3");
   menuMusic = new SoundFile(this, "menu.mp3");
   ambientMusic = new SoundFile(this, "ambient.mp3");
-
-  applyVolume();
 }
 void draw() {
   background(255);
+  applyVolume();
 
   //Einstellungen für den Startscreen mit Musik und dem Ball-Beispiel
   if (inStartScreen) {
@@ -250,8 +249,8 @@ void keyPressed() {
     if (key == 'b') vsBot = !vsBot;
     if (keyCode == RIGHT) currentDifficulty = min(currentDifficulty + 1, 5);
     if (keyCode == LEFT) currentDifficulty = max(currentDifficulty -1, 0);
-    if (key == 'v') { masterVolume = min(masterVolume + 0.1, 1.0); applyVolume(); }
-    if (key == 'c') { masterVolume = max(masterVolume - 0.1, 0.0); applyVolume(); }
+    if (key == 'v') masterVolume = min(round((masterVolume + 0.1) * 10) / 10.0, 1.0);
+    if (key == 'c') masterVolume = max(round((masterVolume - 0.1) * 10) / 10.0, 0.0);
     if (keyCode == ENTER) {
       inStartScreen = false;
       started = true;
