@@ -83,7 +83,7 @@ ambient.mp3
 - Daten im Format `Paddle1,Paddle2\n` senden (0–100%)
 
 **Wichtig: Anschluss Spieler 1 Pin A4, Anschluss Spieler 2 Pin A3**
-Kann auch in der `arduino_ping_ping.ino` Datei geändert werden.
+Kann auch in der `arduino_ping_pong.ino` Datei geändert werden.
 
 ---
 
