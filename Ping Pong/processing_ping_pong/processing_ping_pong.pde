@@ -18,6 +18,10 @@ final int PADDLE_H = 300;
 
 int PADDLE_SPEED = 6;
 
+ArrayList<MenuBall> menuBalls = new ArrayList<MenuBall>();
+int lastMenuBallSpawn = 0;
+int MENU_BALL_INTERVAL = 10000; // ms
+
 // Koordinaten des Balles und der Spieler-Paddles
 int ballX, ballY;
 int ballDirX = -1;
@@ -36,6 +40,7 @@ boolean started = false;
 int pointsToWin = 3;
 boolean inStartScreen = true;
 boolean gameOver = false;
+boolean paused = false;
 boolean useKeys;
 boolean invertControls = false;
 
@@ -85,13 +90,28 @@ void setup() {
 
   applyVolume();
 }
+
 void draw() {
   background(255);
 
   //Einstellungen für den Startscreen mit Musik und dem Ball-Beispiel
   if (inStartScreen) {
-    moveBall();
-    drawBall();
+    // Neue Menü-Bälle spawnen
+if (millis() - lastMenuBallSpawn > MENU_BALL_INTERVAL) {
+  menuBalls.add(new MenuBall());
+  lastMenuBallSpawn = millis();
+}
+
+// Menü-Bälle updaten & zeichnen
+for (int i = 0; i < menuBalls.size(); i++) {
+  MenuBall b = menuBalls.get(i);
+  b.update();
+  b.draw();
+
+  for (int j = i + 1; j < menuBalls.size(); j++) {
+    b.collide(menuBalls.get(j));
+  }
+}
     if (!menuMusic.isPlaying()) playSound(menuMusic);
     drawStartScreen();
     return;
@@ -107,17 +127,29 @@ void draw() {
     }
     return;
   }
+  
+  // Pause
+if (paused) {
+  textAlign(CENTER, CENTER);
+  textSize(64);
+  fill(0);
+  text("PAUSE", width / 2, height / 2);
+
+  textSize(20);
+  text("Drücke P zum Fortsetzen", width / 2, height / 2 + 50);
+  text("Drücke E zum Verlassen", width / 2, height / 2 + 70);
+  return;
+}
+
 
   //Ambiente Musik Loopen 
-  if (!ambientMusic.isPlaying()) playSound(ambientMusic);
+  if (!ambientMusic.isPlaying() && !paused) playSound(ambientMusic);
 
   //Tasten paddles Speed
   if (wPressed) p1Y -= PADDLE_SPEED;
   if (sPressed) p1Y += PADDLE_SPEED;
   if (pPressed) p2Y -= PADDLE_SPEED;
   if (oePressed) p2Y += PADDLE_SPEED;
-  
-  
 
   //Einstellung für Serial oder Keys (Paddels setzen)
   if(vsBot){
@@ -261,13 +293,29 @@ void keyPressed() {
       started = true;
       pointsP1 = 0;
       pointsP2 = 0;
+      menuBalls.clear();
       resetBall();
       playSound(startSound);
     }
     BOT_SPEED = botSpeeds[currentDifficulty];
     return;
   }
+  
+  if (!inStartScreen && !gameOver) {
+    if (key == 'p') {
+      paused = !paused; // Pause umschalten
+      ambientMusic.stop();
+    }
+    if(paused){
+      if(key == 'e'){
+        paused = false;
+        inStartScreen = true;
+        ambientMusic.stop();
+      }
+    }
+  }
 
+  
   if (key == 'w') wPressed = true;
   if (key == 's') sPressed = true;
   if (keyCode == UP) pPressed = true;
@@ -384,10 +432,95 @@ void applyVolume() {
 
 void playSound(SoundFile s) {
   if (s == null) return;
+  applyVolume();
   if (masterVolume <= 0.0) return; 
-  
 
   s.stop();
   s.amp(masterVolume);
   s.play();
+}
+
+class MenuBall {
+  float x, y;
+  float vx, vy;
+  float r;
+
+  MenuBall() {
+  r = random(12, 22);
+
+  int side = int(random(4)); // 0=links,1=rechts,2=oben,3=unten
+
+  if (side == 0) { // links
+    x = -r;
+    y = random(0, height);
+    vx = random(1, 4);
+    vy = random(-2, 2);
+  } 
+  else if (side == 1) { // rechts
+    x = width + r;
+    y = random(0, height);
+    vx = random(-4, -1);
+    vy = random(-2, 2);
+  } 
+  else if (side == 2) { // oben
+    x = random(0, width);
+    y = -r;
+    vx = random(-2, 2);
+    vy = random(1, 4);
+  } 
+  else { // unten
+    x = random(0, width);
+    y = height + r;
+    vx = random(-2, 2);
+    vy = random(-4, -1);
+  }
+}
+
+
+  void update() {
+  x += vx;
+  y += vy;
+
+  // Links
+  if (x < r) {
+    x = r;
+    vx = abs(vx);   // immer nach rechts
+  }
+
+  // Rechts
+  if (x > width - r) {
+    x = width - r;
+    vx = -abs(vx);  // immer nach links
+  }
+
+  // Oben
+  if (y < r) {
+    y = r;
+    vy = abs(vy);   // immer nach unten
+  }
+
+  // Unten
+  if (y > height - r) {
+    y = height - r;
+    vy = -abs(vy);  // immer nach oben
+  }
+}
+
+  void draw() {
+    fill(0, 120);
+    noStroke();
+    circle(x, y, r * 2);
+  }
+
+  void collide(MenuBall other) {
+    float d = dist(x, y, other.x, other.y);
+    if (d < r + other.r) {
+      float tmpX = vx;
+      float tmpY = vy;
+      vx = other.vx;
+      vy = other.vy;
+      other.vx = tmpX;
+      other.vy = tmpY;
+    }
+  }
 }
