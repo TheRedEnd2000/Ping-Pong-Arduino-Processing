@@ -4,7 +4,7 @@ import processing.sound.*;
 
 
 // Dieser COM Port ist wichtig zu ändern, falls man die Serial benutzen möchte!
-String port = "COM3";
+String port = "COM9";
 
 
 
@@ -92,7 +92,7 @@ void draw() {
   if (inStartScreen) {
     moveBall();
     drawBall();
-    if (!menuMusic.isPlaying()) menuMusic.play();
+    if (!menuMusic.isPlaying()) playSound(menuMusic);
     drawStartScreen();
     return;
   }
@@ -109,7 +109,7 @@ void draw() {
   }
 
   //Ambiente Musik Loopen 
-  if (!ambientMusic.isPlaying()) ambientMusic.play();
+  if (!ambientMusic.isPlaying()) playSound(ambientMusic);
 
   //Tasten paddles Speed
   if (wPressed) p1Y -= PADDLE_SPEED;
@@ -176,7 +176,7 @@ void moveBall() {
 
   if (ballY <= BALL_SIZE/2 || ballY >= height - BALL_SIZE/2) {
     ballDirY *= -1;
-    if(!inStartScreen) hitSound.play();
+    if(!inStartScreen) playSound(hitSound);
   }
 
   if (inStartScreen) {
@@ -189,7 +189,7 @@ void moveBall() {
       ballY < p1Y + PADDLE_H/2) {
     ballDirX = 1;
     ballSpeed++;
-    hitSound.play();
+    playSound(hitSound);
   }
 
   if (ballX >= width - PADDLE_W - BALL_SIZE/2 &&
@@ -198,7 +198,7 @@ void moveBall() {
     ballDirX = -1;
     ballSpeed++;
     
-    hitSound.play();
+    playSound(hitSound);
   }
 
   if (ballX < 0 || ballX > width) {
@@ -210,11 +210,11 @@ void moveBall() {
       gameOverStartTime = millis();
       started = false;
       ambientMusic.stop();
-      winSound.play();
+      playSound(winSound);
     }
 
     resetBall();
-    if(!gameOver) scoreSound.play();
+    if(!gameOver) playSound(scoreSound);
   }
 }
 
@@ -262,7 +262,7 @@ void keyPressed() {
       pointsP1 = 0;
       pointsP2 = 0;
       resetBall();
-      startSound.play();
+      playSound(startSound);
     }
     BOT_SPEED = botSpeeds[currentDifficulty];
     return;
@@ -374,10 +374,20 @@ void drawGameOver() {
 
 //Musik lautstärke
 void applyVolume() {
-  hitSound.amp(masterVolume);
   scoreSound.amp(masterVolume);
   winSound.amp(masterVolume);
   startSound.amp(masterVolume);
   menuMusic.amp(masterVolume); 
   ambientMusic.amp(masterVolume); 
+  hitSound.amp(masterVolume);
+}
+
+void playSound(SoundFile s) {
+  if (s == null) return;
+  if (masterVolume <= 0.0) return; 
+  
+
+  s.stop();
+  s.amp(masterVolume);
+  s.play();
 }
